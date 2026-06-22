@@ -31,6 +31,7 @@ local playerState = {
 	isNoclip = false,
 	isInfJump = false,
 	originalSpeed = CONFIG.DEFAULT_SPEED,
+	invisConnection = nil,
 }
 
 -- GUI Elements
@@ -91,35 +92,51 @@ local function updateStatusUI()
 	end
 end
 
--- Core Logic Functions (Untouched)
+-- Core Logic Functions (Mejorada con técnica de NuclearBobo)
 local function toggleInvisibility()
 	if not player.Character then return end
 	playerState.isInvisible = not playerState.isInvisible
+
 	if playerState.isInvisible then
 		playActivateSound()
 		local hrp = player.Character:FindFirstChild("HumanoidRootPart") :: BasePart?
+		local humanoid = getHumanoid()
 		if not hrp then return end
-		local savedPosition = hrp.CFrame
-		player.Character:MoveTo(CONFIG.INVISIBILITY_POSITION)
-		task.wait(0.15)
-		local seat = Instance.new("Seat")
-		seat.Name = "invischair"
-		seat.Anchored = false; seat.CanCollide = false; seat.Transparency = 1
-		seat.Position = CONFIG.INVISIBILITY_POSITION
-		seat.Parent = workspace
-		local weld = Instance.new("Weld")
-		weld.Part0 = seat
-		weld.Part1 = player.Character:FindFirstChild("Torso") or player.Character:FindFirstChild("UpperTorso")
-		weld.Parent = seat
-		task.wait()
-		seat.CFrame = savedPosition
+
+		-- Técnica de NuclearBobo: Teleporte bajo el mapa cada frame
+		playerState.invisConnection = RunService.Heartbeat:Connect(function()
+			if not player.Character or not hrp or not humanoid then return end
+			
+			local cf = hrp.CFrame
+			local camOffset = humanoid.CameraOffset
+			local hidden = cf * CFrame.new(0, -200000, 0)
+			
+			hrp.CFrame = hidden
+			humanoid.CameraOffset = hidden:ToObjectSpace(CFrame.new(cf.Position)).Position
+			
+			RunService.RenderStepped:Wait()
+			
+			hrp.CFrame = cf
+			humanoid.CameraOffset = camOffset
+		end)
+
 		setCharacterTransparency(player.Character, 0.5)
 		toggleButton.Text = "BECOME VISIBLE"
 	else
 		playDeactivateSound()
-		local invisChair = workspace:FindFirstChild("invischair")
-		if invisChair then invisChair:Destroy() end
-		if player.Character then setCharacterTransparency(player.Character, 0) end
+		
+		-- Desconectar el loop
+		if playerState.invisConnection then
+			playerState.invisConnection:Disconnect()
+			playerState.invisConnection = nil
+		end
+
+		if player.Character then 
+			setCharacterTransparency(player.Character, 0)
+			local humanoid = getHumanoid()
+			if humanoid then humanoid.CameraOffset = Vector3.zero end
+		end
+		
 		toggleButton.Text = "BECOME INVISIBLE"
 	end
 	updateStatusUI()
