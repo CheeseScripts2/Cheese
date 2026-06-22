@@ -12,7 +12,8 @@ local CONFIG = {
 	SUCCESS_COLOR = Color3.fromRGB(0, 255, 140),
 	DANGER_COLOR = Color3.fromRGB(255, 55, 55),
 	TEXT_COLOR = Color3.fromRGB(245, 245, 245),
-	LIGHTNING_SOUND_ID = "rbxassetid://412310519",
+	ACTIVATE_SOUND_ID = "rbxassetid://121348992695732",
+	DEACTIVATE_SOUND_ID = "rbxassetid://140494750798924",
 	SOUND_VOLUME = 0.5,
 }
 
@@ -44,10 +45,19 @@ local closeButton: TextButton
 local statusLabel: TextLabel 
 local statusCircle: Frame
 
--- Sound Function
-local function playLightningSound()
+-- Sound Functions
+local function playActivateSound()
 	local sound = Instance.new("Sound")
-	sound.SoundId = CONFIG.LIGHTNING_SOUND_ID
+	sound.SoundId = CONFIG.ACTIVATE_SOUND_ID
+	sound.Volume = CONFIG.SOUND_VOLUME
+	sound.Parent = workspace
+	sound:Play()
+	game:GetService("Debris"):AddItem(sound, 2)
+end
+
+local function playDeactivateSound()
+	local sound = Instance.new("Sound")
+	sound.SoundId = CONFIG.DEACTIVATE_SOUND_ID
 	sound.Volume = CONFIG.SOUND_VOLUME
 	sound.Parent = workspace
 	sound:Play()
@@ -86,6 +96,7 @@ local function toggleInvisibility()
 	if not player.Character then return end
 	playerState.isInvisible = not playerState.isInvisible
 	if playerState.isInvisible then
+		playActivateSound()
 		local hrp = player.Character:FindFirstChild("HumanoidRootPart") :: BasePart?
 		if not hrp then return end
 		local savedPosition = hrp.CFrame
@@ -105,6 +116,7 @@ local function toggleInvisibility()
 		setCharacterTransparency(player.Character, 0.5)
 		toggleButton.Text = "BECOME VISIBLE"
 	else
+		playDeactivateSound()
 		local invisChair = workspace:FindFirstChild("invischair")
 		if invisChair then invisChair:Destroy() end
 		if player.Character then setCharacterTransparency(player.Character, 0) end
@@ -118,10 +130,12 @@ local function toggleSpeedBoost()
 	if not humanoid then return end
 	playerState.isSpeedBoosted = not playerState.isSpeedBoosted
 	if playerState.isSpeedBoosted then
+		playActivateSound()
 		humanoid.WalkSpeed = CONFIG.BOOSTED_SPEED
 		speedButton.Text = "SPEED: ON"
 		TweenService:Create(speedButton, TweenInfo.new(0.3), {TextColor3 = CONFIG.SUCCESS_COLOR}):Play()
 	else
+		playDeactivateSound()
 		humanoid.WalkSpeed = playerState.originalSpeed
 		speedButton.Text = "SPEED BOOST"
 		TweenService:Create(speedButton, TweenInfo.new(0.3), {TextColor3 = CONFIG.TEXT_COLOR}):Play()
@@ -131,9 +145,11 @@ end
 local function toggleNoclip()
 	playerState.isNoclip = not playerState.isNoclip
 	if playerState.isNoclip then
+		playActivateSound()
 		noclipButton.Text = "NOCLIP: ON"
 		TweenService:Create(noclipButton, TweenInfo.new(0.3), {TextColor3 = CONFIG.SUCCESS_COLOR}):Play()
 	else
+		playDeactivateSound()
 		noclipButton.Text = "NOCLIP"
 		TweenService:Create(noclipButton, TweenInfo.new(0.3), {TextColor3 = CONFIG.TEXT_COLOR}):Play()
 	end
@@ -142,9 +158,11 @@ end
 local function toggleInfJump()
 	playerState.isInfJump = not playerState.isInfJump
 	if playerState.isInfJump then
+		playActivateSound()
 		infJumpButton.Text = "INF JUMP: ON"
 		TweenService:Create(infJumpButton, TweenInfo.new(0.3), {TextColor3 = CONFIG.SUCCESS_COLOR}):Play()
 	else
+		playDeactivateSound()
 		infJumpButton.Text = "INFINITE JUMP"
 		TweenService:Create(infJumpButton, TweenInfo.new(0.3), {TextColor3 = CONFIG.TEXT_COLOR}):Play()
 	end
@@ -297,30 +315,26 @@ end
 -- Initialization
 createGUI()
 
--- Botones con Sonido de Rayo
+-- Botones con Sonidos
 toggleButton.MouseButton1Click:Connect(function()
-	playLightningSound()
 	toggleInvisibility()
 end)
 
 speedButton.MouseButton1Click:Connect(function()
-	playLightningSound()
 	toggleSpeedBoost()
 end)
 
 noclipButton.MouseButton1Click:Connect(function()
-	playLightningSound()
 	toggleNoclip()
 end)
 
 infJumpButton.MouseButton1Click:Connect(function()
-	playLightningSound()
 	toggleInfJump()
 end)
 
 -- Floating Button Functionality
 floatingButton.MouseButton1Click:Connect(function()
-	playLightningSound()
+	playActivateSound()
 	if mainFrame.Visible == false then
 		mainFrame.Visible = true
 		TweenService:Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -89, 0.5, -132)}):Play()
